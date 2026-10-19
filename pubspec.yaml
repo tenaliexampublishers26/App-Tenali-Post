@@ -1,0 +1,43 @@
+name: tenali_post
+description: "Tenali Post — Official Android application for Indian Postal Departmental Exam Preparation (MTS, Postman, Mail Guard, PA/SA, and LGO)."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI and Design
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.17
+  percent_indicator: ^4.2.4
+  flutter_spinkit: ^5.2.1
+
+  # State Management
+  provider: ^6.1.2
+
+  # Backend and Auth
+  supabase_flutter: ^2.8.3
+  shared_preferences: ^2.3.5
+  flutter_secure_storage: ^9.2.4
+
+  # Utilities
+  intl: ^0.19.0
+  url_launcher: ^6.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/tenali_post_logo.png
+    - assets/images/
