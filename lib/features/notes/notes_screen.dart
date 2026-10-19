@@ -14,10 +14,41 @@ class NotesScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Revision Notes & PDFs'),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: notes.length,
-        itemBuilder: (context, index) {
+      body: notes.isEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: AppTheme.secondaryMaroon.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.description_outlined, size: 36, color: AppTheme.secondaryMaroon),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No Study Notes Available',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Study notes and revision PDFs uploaded by administrators will appear here.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: notes.length,
+              itemBuilder: (context, index) {
           final note = notes[index];
           return Card(
             margin: const EdgeInsets.only(bottom: 12),

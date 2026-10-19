@@ -166,7 +166,24 @@ class LiveTestResultScreen extends StatelessWidget {
             const SizedBox(height: 10),
 
             // Review List
-            ListView.builder(
+            if (MockData.sampleQuestions.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceWhite,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.borderSubtle),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Detailed question review is unavailable for this test.',
+                    style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                  ),
+                ),
+              )
+            else
+              ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: MockData.sampleQuestions.length,

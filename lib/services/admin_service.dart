@@ -101,24 +101,6 @@ class AdminService {
     _videos.addAll(MockData.videoLessons);
     _notes.addAll(MockData.studyNotes);
 
-    // Initial realistic registered student records
-    final sampleSub = LiveTestSubmission(
-      id: 'sub-01',
-      testId: 'all-india-mock-01',
-      studentName: 'Srikanth Verma',
-      phoneNumber: '9876543210',
-      marksObtained: 28.0,
-      totalMarks: 30.0,
-      correctCount: 28,
-      wrongCount: 2,
-      skippedCount: 0,
-      percentage: 93.3,
-      rank: 1,
-      answers: const {'q-mts-01': 'B', 'q-mts-02': 'B'},
-      submittedAt: DateTime.now().subtract(const Duration(days: 1)),
-    );
-    _submissions.add(sampleSub);
-
     _students.addAll([
       StudentRecord(
         id: 'stu-01',
@@ -130,9 +112,9 @@ class AdminService {
         status: 'Active',
         registeredAt: DateTime.now().subtract(const Duration(days: 45)),
         lastActiveAt: DateTime.now().subtract(const Duration(hours: 2)),
-        totalTestsAttempted: 4,
-        averagePercentage: 91.5,
-        testAttempts: [sampleSub],
+        totalTestsAttempted: 0,
+        averagePercentage: 0.0,
+        testAttempts: const [],
       ),
       StudentRecord(
         id: 'stu-02',

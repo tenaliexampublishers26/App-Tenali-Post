@@ -58,14 +58,54 @@ void main() {
       expect(mts.code, 'MTS');
     });
 
-    test('Sample questions cover English, Telugu, and Hindi languages', () {
-      final englishQuestions = MockData.sampleQuestions.where((q) => q.languageCode == 'en').toList();
-      final teluguQuestions = MockData.sampleQuestions.where((q) => q.languageCode == 'te').toList();
-      final hindiQuestions = MockData.sampleQuestions.where((q) => q.languageCode == 'hi').toList();
+    test('Mock data sample collections start empty for clean administrative slate', () {
+      expect(MockData.sampleQuestions.isEmpty, true);
+      expect(MockData.liveTests.isEmpty, true);
+      expect(MockData.videoLessons.isEmpty, true);
+      expect(MockData.studyNotes.isEmpty, true);
+    });
 
-      expect(englishQuestions.isNotEmpty, true);
-      expect(teluguQuestions.isNotEmpty, true);
-      expect(hindiQuestions.isNotEmpty, true);
+    test('Question model supports English, Telugu, and Hindi languages', () {
+      const enQ = Question(
+        id: 'q-en',
+        chapterId: 'ch-1',
+        examId: 'mts',
+        languageCode: 'en',
+        questionText: 'Which official is the head of Postal Division?',
+        optionA: 'SDI',
+        optionB: 'SPO',
+        optionC: 'CPMG',
+        optionD: 'DG',
+        correctOption: 'B',
+      );
+      const teQ = Question(
+        id: 'q-te',
+        chapterId: 'ch-1',
+        examId: 'mts',
+        languageCode: 'te',
+        questionText: 'పోస్టల్ డివిజన్ యొక్క అధిపతి ఎవరు?',
+        optionA: 'SDI',
+        optionB: 'SSPO',
+        optionC: 'CPMG',
+        optionD: 'DG',
+        correctOption: 'B',
+      );
+      const hiQ = Question(
+        id: 'q-hi',
+        chapterId: 'ch-1',
+        examId: 'mts',
+        languageCode: 'hi',
+        questionText: 'डाक मंडल का प्रमुख कौन होता है?',
+        optionA: 'SDI',
+        optionB: 'SSPO',
+        optionC: 'CPMG',
+        optionD: 'DG',
+        correctOption: 'B',
+      );
+
+      expect(enQ.languageCode, 'en');
+      expect(teQ.languageCode, 'te');
+      expect(hiQ.languageCode, 'hi');
     });
   });
 }

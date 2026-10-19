@@ -15,10 +15,41 @@ class VideosScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Postal Video Classes'),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: videos.length,
-        itemBuilder: (context, index) {
+      body: videos.isEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryNavy.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.play_lesson_outlined, size: 36, color: AppTheme.primaryNavy),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No Video Classes Available',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Video classes uploaded by faculty or administrators will appear here.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: videos.length,
+              itemBuilder: (context, index) {
           final video = videos[index];
           return Card(
             margin: const EdgeInsets.only(bottom: 16),

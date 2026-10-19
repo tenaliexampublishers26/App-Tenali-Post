@@ -141,7 +141,19 @@ bad-01,ch-1,mts,en,Duplicate ID question,A,B,C,D,C,Exp,medium,Ref''';
 
   group('Exam & Chapter Safety Deletion Tests', () {
     test('Prevents accidental deletion of exam referenced by existing questions', () async {
-      // MTS exam has active questions in MockData
+      await adminService.saveQuestion(const Question(
+        id: 'safety-check-q1',
+        chapterId: 'post-office-guide-part-1',
+        examId: 'mts',
+        languageCode: 'en',
+        questionText: 'Safety check question?',
+        optionA: 'A',
+        optionB: 'B',
+        optionC: 'C',
+        optionD: 'D',
+        correctOption: 'A',
+      ));
+
       expect(
         () async => await adminService.deleteExam('mts'),
         throwsA(isA<Exception>().having(
@@ -153,6 +165,19 @@ bad-01,ch-1,mts,en,Duplicate ID question,A,B,C,D,C,Exp,medium,Ref''';
     });
 
     test('Prevents accidental deletion of chapter referenced by existing questions', () async {
+      await adminService.saveQuestion(const Question(
+        id: 'safety-check-q2',
+        chapterId: 'post-office-guide-part-1',
+        examId: 'mts',
+        languageCode: 'en',
+        questionText: 'Safety check chapter question?',
+        optionA: 'A',
+        optionB: 'B',
+        optionC: 'C',
+        optionD: 'D',
+        correctOption: 'A',
+      ));
+
       expect(
         () async => await adminService.deleteChapter('post-office-guide-part-1'),
         throwsA(isA<Exception>().having(
