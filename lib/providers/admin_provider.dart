@@ -72,6 +72,9 @@ class AdminProvider extends ChangeNotifier {
       _stats = await _service.getAdminStats();
       _exams = await _service.getExams();
       _chapters = await _service.getChapters();
+      _questions = await _service.getQuestions();
+      _students = await _service.getStudents();
+      _liveTests = await _service.getLiveTests();
       _auditLogs = await _service.getAuditLogs();
     } catch (e) {
       _errorMessage = e.toString();

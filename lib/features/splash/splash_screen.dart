@@ -5,6 +5,7 @@ import '../../core/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/mcq_provider.dart';
 import '../../providers/live_test_provider.dart';
+import '../../providers/notification_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -43,17 +44,31 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     final mcqProvider = Provider.of<McqProvider>(context, listen: false);
     final liveTestProvider = Provider.of<LiveTestProvider>(context, listen: false);
 
-    await Future.wait([
-      authProvider.restoreSession(),
-      mcqProvider.loadExams(),
-      liveTestProvider.loadLiveTests(),
-      Future.delayed(const Duration(milliseconds: 1800)),
-    ]);
+    final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
+
+    try {
+      await Future.wait([
+        authProvider.restoreSession(),
+        mcqProvider.loadExams(),
+        liveTestProvider.loadLiveTests(),
+        notificationProvider.loadAnnouncements(
+          userId: authProvider.user?.id,
+          isAdmin: authProvider.isAdmin,
+        ),
+        Future.delayed(const Duration(milliseconds: 1800)),
+      ]).timeout(const Duration(seconds: 4));
+    } catch (_) {
+      // Proceed even if network calls timed out
+    }
 
     if (!mounted) return;
 
     if (authProvider.isAuthenticated) {
-      Navigator.pushReplacementNamed(context, '/home');
+      if (authProvider.needsProfileCompletion) {
+        Navigator.pushReplacementNamed(context, '/profile-completion');
+      } else {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     } else {
       Navigator.pushReplacementNamed(context, '/login');
     }

@@ -2,10 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/live_test.dart';
 import '../models/question.dart';
-import '../services/supabase_service.dart';
+import '../services/data_service.dart';
 
 class LiveTestProvider extends ChangeNotifier {
-  final SupabaseService _service = SupabaseService();
+  final DataService _service = DataService();
 
   List<LiveTest> _liveTests = [];
   LiveTest? _currentTest;

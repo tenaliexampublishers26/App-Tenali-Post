@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../models/exam.dart';
 import '../models/chapter.dart';
 import '../models/question.dart';
-import '../services/supabase_service.dart';
+import '../services/data_service.dart';
 
 class McqProvider extends ChangeNotifier {
-  final SupabaseService _service = SupabaseService();
+  final DataService _service = DataService();
 
   List<Exam> _exams = [];
   List<Chapter> _chapters = [];

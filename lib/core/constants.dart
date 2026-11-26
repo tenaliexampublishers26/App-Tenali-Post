@@ -4,8 +4,10 @@ class AppConstants {
   static const String appSubtext = 'Excellence in Postal & Competitive Exams';
   static const String logoAsset = 'assets/images/tenali_post_logo.png';
   
-  // Intended initial admin email (backend-provisioned)
-  static const String initialAdminEmail = 'tenaliexamspublishers26@gmail.com';
+  // The only authorized administrator email
+  static const String authorizedAdminEmail = 'tenaliexampublishers26@gmail.com';
+  static const String initialAdminEmail = 'tenaliexampublishers26@gmail.com';
+  static const String legacyAdminEmail = 'tenaliexamspublishers26@gmail.com';
 
   // Supported India Post Departmental Exam Categories
   static const List<Map<String, String>> exams = [
@@ -53,11 +55,19 @@ class AppConstants {
     {'code': 'hi', 'name': 'Hindi', 'nativeName': 'हिन्दी'},
   ];
 
-  // Safe Supabase configuration
-  // You can paste your Supabase Project URL and Anon Public Key below:
-  static const String supabaseUrl = '';
-  static const String supabaseAnonKey = '';
-  
-  static const String supabaseUrlPlaceholder = 'https://your-tenali-post-project.supabase.co';
-  static const String supabaseAnonKeyPlaceholder = 'your-anon-public-key';
+  // Supabase Project Configuration
+  static const String supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://nrlsqwvpbrinbagwzrfk.supabase.co',
+  );
+  static const String supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: 'sb_publishable_KY5GqZ_BF7glQXNvg53RvQ_wVt_pSe_',
+  );
+
+  // Example Student & Admin Login Credentials for instant app access
+  static const String exampleLoginEmail = 'student@example.com';
+  static const String exampleLoginPassword = 'Password@123';
+  static const String exampleAdminEmail = authorizedAdminEmail;
+  static const String exampleAdminPassword = 'Admin@123';
 }

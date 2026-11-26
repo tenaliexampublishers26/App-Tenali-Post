@@ -98,7 +98,7 @@ class _AdminNotesManagementScreenState extends State<AdminNotesManagementScreen>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('${notes.length} Study PDF Documents', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.textSecondary)),
-                const Text('Supabase Secure Storage Supported', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                const Text('Secure Local Storage Supported', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
               ],
             ),
           ),

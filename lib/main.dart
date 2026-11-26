@@ -8,14 +8,18 @@ import 'services/supabase_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/mcq_provider.dart';
 import 'providers/live_test_provider.dart';
-
 import 'providers/admin_provider.dart';
+import 'providers/lms_admin_provider.dart';
+import 'providers/notification_provider.dart';
 
 import 'features/splash/splash_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/navigation/main_nav_screen.dart';
 import 'features/profile/profile_screen.dart';
+import 'features/profile/profile_completion_screen.dart';
+import 'features/notifications/notifications_screen.dart';
 import 'features/admin/admin_dashboard_screen.dart';
+import 'features/admin/announcements/admin_announcements_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +34,7 @@ void main() async {
     ),
   );
 
-  // Initialize dedicated Supabase project service
+  // Initialize dedicated Supabase project
   await SupabaseService().initialize();
 
   runApp(const TenaliPostApp());
@@ -47,6 +51,8 @@ class TenaliPostApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => McqProvider()),
         ChangeNotifierProvider(create: (_) => LiveTestProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
+        ChangeNotifierProvider(create: (_) => LmsAdminProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MaterialApp(
         title: AppConstants.appName,
@@ -82,9 +88,12 @@ class TenaliPostApp extends StatelessWidget {
         routes: {
           '/': (context) => const SplashScreen(),
           '/login': (context) => const LoginScreen(),
+          '/profile-completion': (context) => const ProfileCompletionScreen(),
           '/home': (context) => const MainNavScreen(),
           '/profile': (context) => const ProfileScreen(),
+          '/notifications': (context) => const NotificationsScreen(),
           '/admin': (context) => const AdminDashboardScreen(),
+          '/admin/announcements': (context) => const AdminAnnouncementsScreen(),
         },
       ),
     );

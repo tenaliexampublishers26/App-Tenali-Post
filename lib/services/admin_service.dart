@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import '../models/exam.dart';
 import '../models/chapter.dart';
 import '../models/question.dart';
@@ -8,8 +7,8 @@ import '../models/video_lesson.dart';
 import '../models/study_note.dart';
 import '../models/admin_audit_log.dart';
 import '../models/student_record.dart';
+import '../core/constants.dart';
 import 'mock_data.dart';
-import 'supabase_service.dart';
 
 class RowValidationError {
   final int rowIndex;
@@ -77,12 +76,12 @@ class AdminService {
 
   static bool isAuthorizedAdmin(String? email) {
     if (email == null) return false;
-    return email.trim().toLowerCase() == 'tenaliexamspublishers26@gmail.com';
+    final normalized = email.trim().toLowerCase();
+    return normalized == AppConstants.authorizedAdminEmail.toLowerCase() ||
+        normalized == AppConstants.legacyAdminEmail.toLowerCase();
   }
 
-  final SupabaseService _supabase = SupabaseService();
-
-  // In-memory persistent caches (synchronized with MockData & Supabase fallback)
+  // In-memory persistent caches
   final List<Exam> _exams = [];
   final List<Chapter> _chapters = [];
   final List<Question> _questions = [];
@@ -214,26 +213,6 @@ class AdminService {
     bool? isPublished,
     String? searchQuery,
   }) async {
-    if (_supabase.isInitialized && _supabase.client != null) {
-      try {
-        var query = _supabase.client!.from('questions').select();
-        if (examId != null && examId.isNotEmpty) query = query.eq('exam_id', examId);
-        if (chapterId != null && chapterId.isNotEmpty) query = query.eq('chapter_id', chapterId);
-        if (languageCode != null && languageCode.isNotEmpty && languageCode != 'all') {
-          query = query.eq('language_code', languageCode);
-        }
-        if (difficulty != null && difficulty.isNotEmpty && difficulty != 'all') {
-          query = query.eq('difficulty', difficulty);
-        }
-        if (isPublished != null) query = query.eq('is_published', isPublished);
-
-        final res = await query.order('created_at', ascending: false);
-        return (res as List).map((e) => Question.fromJson(e)).toList();
-      } catch (e) {
-        if (kDebugMode) print('[AdminService] Supabase getQuestions error: $e');
-      }
-    }
-
     // Local / In-memory filter
     return _questions.where((q) {
       if (examId != null && examId.isNotEmpty && q.examId != examId) return false;
@@ -271,18 +250,6 @@ class AdminService {
   Future<void> saveQuestion(Question question, {String adminEmail = 'tenaliexamspublishers26@gmail.com'}) async {
     final bool isUpdate = _questions.any((q) => q.id == question.id);
 
-    if (_supabase.isInitialized && _supabase.client != null) {
-      try {
-        if (isUpdate) {
-          await _supabase.client!.from('questions').update(question.toJson()).eq('id', question.id);
-        } else {
-          await _supabase.client!.from('questions').insert(question.toJson());
-        }
-      } catch (e) {
-        if (kDebugMode) print('[AdminService] Supabase saveQuestion error: $e');
-      }
-    }
-
     if (isUpdate) {
       final index = _questions.indexWhere((q) => q.id == question.id);
       if (index != -1) _questions[index] = question;
@@ -304,14 +271,6 @@ class AdminService {
   }
 
   Future<void> deleteQuestion(String questionId, {String adminEmail = 'tenaliexamspublishers26@gmail.com'}) async {
-    if (_supabase.isInitialized && _supabase.client != null) {
-      try {
-        await _supabase.client!.from('questions').delete().eq('id', questionId);
-      } catch (e) {
-        if (kDebugMode) print('[AdminService] Supabase deleteQuestion error: $e');
-      }
-    }
-
     _questions.removeWhere((q) => q.id == questionId);
     MockData.sampleQuestions.removeWhere((q) => q.id == questionId);
 
@@ -957,14 +916,6 @@ class AdminService {
       description: description,
       timestamp: DateTime.now(),
     );
-
-    if (_supabase.isInitialized && _supabase.client != null) {
-      try {
-        await _supabase.client!.from('admin_audit_logs').insert(entry.toJson());
-      } catch (e) {
-        if (kDebugMode) print('[AdminService] Supabase recordAuditLog error: $e');
-      }
-    }
 
     _auditLogs.add(entry);
   }

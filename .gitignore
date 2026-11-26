@@ -16,9 +16,13 @@
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
 
-# Environment files
+# Environment & Secrets (Never commit secrets)
 .env
+.env.local
 .env.*
+.env*.local
+*.env
+*.local
 !.env.example
 
 # IDE

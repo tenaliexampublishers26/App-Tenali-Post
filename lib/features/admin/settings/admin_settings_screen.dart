@@ -12,122 +12,85 @@ class AdminSettingsScreen extends StatefulWidget {
 
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   final SupabaseService _supabase = SupabaseService();
-  bool _isConnecting = false;
+  bool _isTesting = false;
 
-  void _showConnectDialog() {
-    final urlController = TextEditingController(text: AppConstants.supabaseUrl);
-    final keyController = TextEditingController(text: AppConstants.supabaseAnonKey);
+  Future<void> _runConnectionTest() async {
+    setState(() => _isTesting = true);
 
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
+    final result = await _supabase.testConnection();
+
+    if (mounted) {
+      setState(() => _isTesting = false);
+
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
           backgroundColor: AppTheme.surfaceWarmWhite,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.key_rounded, color: AppTheme.primaryNavy, size: 24),
-              SizedBox(width: 10),
-              Text('Connect Supabase Keys', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+              Icon(
+                result.isDatabaseReachable ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
+                color: result.isDatabaseReachable ? AppTheme.successGreen : AppTheme.goldBell,
+                size: 26,
+              ),
+              const SizedBox(width: 10),
+              const Text('Connection Test', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
             ],
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Enter your dedicated Supabase Project URL and Anon Public Key from your Supabase Dashboard (Settings -> API):',
-                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.3),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: result.isDatabaseReachable ? AppTheme.successGreenBg : AppTheme.surfaceCream,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: urlController,
-                  decoration: InputDecoration(
-                    labelText: 'Supabase Project URL *',
-                    hintText: 'https://xxxxxxxxxxxx.supabase.co',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                child: Text(
+                  result.status,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: result.isDatabaseReachable ? AppTheme.successGreen : AppTheme.primaryNavy,
                   ),
                 ),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: keyController,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    labelText: 'Supabase Anon / Public Key *',
-                    hintText: 'eyJhbGciOiJIUzI1NiIsInR5cCI6...',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Note: Only paste your anon/public key. Never paste the service_role key into the client app.',
-                  style: TextStyle(fontSize: 10, color: AppTheme.errorRed, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                result.message,
+                style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.textPrimary),
+              ),
+              if (result.latencyMs != null) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Icon(Icons.speed_rounded, size: 16, color: AppTheme.textMuted),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Round-trip Latency: ${result.latencyMs} ms',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+                    ),
+                  ],
                 ),
               ],
-            ),
+            ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryNavy,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              onPressed: _isConnecting
-                  ? null
-                  : () async {
-                      final url = urlController.text.trim();
-                      final key = keyController.text.trim();
-
-                      if (url.isEmpty || key.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please enter both Supabase URL and Anon Key.'),
-                            backgroundColor: AppTheme.errorRed,
-                          ),
-                        );
-                        return;
-                      }
-
-                      setDialogState(() => _isConnecting = true);
-
-                      final success = await _supabase.connectWithKeys(url: url, anonKey: key);
-
-                      setDialogState(() => _isConnecting = false);
-                      if (ctx.mounted) Navigator.pop(ctx);
-
-                      if (mounted) {
-                        setState(() {});
-                        if (success) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Successfully connected to Supabase project!'),
-                              backgroundColor: AppTheme.successGreen,
-                            ),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Failed to initialize Supabase with the provided credentials. Please check URL and Key format.'),
-                              backgroundColor: AppTheme.errorRed,
-                            ),
-                          );
-                        }
-                      }
-                    },
-              child: _isConnecting
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Connect & Verify'),
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('OK'),
             ),
           ],
         ),
-      ),
-    );
+      );
+    }
   }
 
   @override
@@ -145,7 +108,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Backend Status Banner
+            // Supabase Project Banner
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -156,7 +119,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               child: Row(
                 children: [
                   Icon(
-                    isLive ? Icons.cloud_done_rounded : Icons.offline_pin_rounded,
+                    isLive ? Icons.cloud_done_rounded : Icons.cloud_queue_rounded,
                     color: isLive ? AppTheme.successGreen : AppTheme.goldBell,
                     size: 32,
                   ),
@@ -166,19 +129,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isLive ? 'Supabase Dedicated Backend Connected' : 'Local Offline / Demo Mode Active',
+                          isLive ? 'Supabase Project Connected' : 'Connecting to Supabase...',
                           style: TextStyle(
                             fontWeight: FontWeight.w900,
                             fontSize: 14,
                             color: isLive ? AppTheme.successGreen : AppTheme.primaryNavy,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isLive
-                              ? 'Queries and mutations are securely synced to your dedicated PostgreSQL project with Row Level Security.'
-                              : 'All admin CRUD operations, CSV/JSON imports, student profiles, and examinations operate via persistent local architecture.',
-                          style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                        const Text(
+                          AppConstants.supabaseUrl,
+                          style: TextStyle(fontSize: 11, fontFamily: 'monospace', color: AppTheme.textSecondary),
                         ),
                       ],
                     ),
@@ -189,26 +149,28 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
             const SizedBox(height: 12),
 
-            // Connect / Reconnect Button
+            // Reachability Test Button
             SizedBox(
               width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isLive ? AppTheme.primaryNavy : AppTheme.secondaryMaroon,
-                  foregroundColor: Colors.white,
+              height: 46,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primaryNavy,
+                  side: const BorderSide(color: AppTheme.primaryNavy, width: 1.5),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                icon: const Icon(Icons.vpn_key_rounded, size: 20),
-                label: Text(
-                  isLive ? 'Update / Reconnect Supabase Keys' : 'Connect Live Supabase with API Keys',
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                icon: _isTesting
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryNavy))
+                    : const Icon(Icons.network_check_rounded, size: 18),
+                label: const Text(
+                  'Test Supabase Connection',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
                 ),
-                onPressed: _showConnectDialog,
+                onPressed: _isTesting ? null : _runConnectionTest,
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
             // Authorized Admin Profile
             _card(
@@ -218,41 +180,40 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 children: [
                   _infoRow('Designated Admin Email:', AppConstants.initialAdminEmail),
                   const SizedBox(height: 8),
-                  _infoRow('Security Role:', 'Super Administrator (Role-verified)'),
+                  _infoRow('Security Role:', 'Super Administrator'),
                   const SizedBox(height: 8),
-                  _infoRow('Authorization Model:', 'PostgreSQL Row Level Security (RLS)'),
+                  _infoRow('Database Engine:', 'PostgreSQL (Dedicated Instance)'),
                 ],
               ),
             ),
 
             const SizedBox(height: 16),
 
-            // Database Architecture Checklist
+            // Security Checklist
             _card(
               title: 'Security Architecture Audit Checklist',
               icon: Icons.security_rounded,
               child: Column(
                 children: [
-                  _checkRow('Strict Project Isolation', 'Completely decoupled from the e-commerce website infrastructure', true),
-                  _checkRow('Zero Service-Role Secrets in Client', 'Client only uses anon key; privileged operations protected via RLS', true),
-                  _checkRow('Server-Verified Authorization', 'Admin rights verified on server, not solely from email strings', true),
-                  _checkRow('Live Test Answer Key Protection', 'Correct options withheld from clients until test end timestamp', true),
-                  _checkRow('Unicode UTF-8 Support', 'Telugu and Hindi character sets fully supported in imports', true),
-                  _checkRow('Immutable Audit Logging', 'All mutating actions recorded with timestamps and admin ID', true),
+                  _checkRow('Strict Project Isolation', 'Completely decoupled from external website or e-commerce databases', true),
+                  _checkRow('Zero Leaked Secrets', 'Database password is kept server-side; client uses publishable anon key', true),
+                  _checkRow('Protected Live Test Answer Keys', 'Correct options withheld from candidates during live tests', true),
+                  _checkRow('Unicode UTF-8 Support', 'Telugu and Hindi character sets fully supported in imports and tests', true),
+                  _checkRow('Immutable Audit Logging', 'All administrative actions recorded with timestamps and admin ID', true),
                 ],
               ),
             ),
 
             const SizedBox(height: 16),
 
-            // Database Tables Reference
+            // Schema Tables Reference
             _card(
-              title: 'Dedicated Supabase Tables',
+              title: 'Dedicated Supabase Schema',
               icon: Icons.table_chart_rounded,
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('The following schema is managed in supabase/migrations/20261019_001_admin_schema.sql:', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                  Text('Run supabase/migrations/20261019_001_admin_schema.sql in your Supabase SQL Editor:', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                   SizedBox(height: 10),
                   Wrap(
                     spacing: 6,
@@ -263,7 +224,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       _TableChip('chapters'),
                       _TableChip('questions'),
                       _TableChip('live_tests'),
-                      _TableChip('live_test_questions_safe (view)'),
                       _TableChip('live_test_submissions'),
                       _TableChip('videos'),
                       _TableChip('notes'),

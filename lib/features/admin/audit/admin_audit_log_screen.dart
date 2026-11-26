@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme.dart';
-import '../../../providers/admin_provider.dart';
+import '../../../core/widgets/admin_ui.dart';
+import '../../../models/lms_models.dart';
+import '../../../providers/lms_admin_provider.dart';
 
 class AdminAuditLogScreen extends StatefulWidget {
   const AdminAuditLogScreen({super.key});
@@ -12,134 +15,203 @@ class AdminAuditLogScreen extends StatefulWidget {
 }
 
 class _AdminAuditLogScreenState extends State<AdminAuditLogScreen> {
+  String _selectedType = 'all';
+  String _search = '';
+
+  static const _filters = ['all', 'settings', 'profile', 'mcq', 'live_test', 'notes'];
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<AdminProvider>(context, listen: false).loadAuditLogs();
+      Provider.of<LmsAdminProvider>(context, listen: false).loadAuditLogs();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final admin = Provider.of<AdminProvider>(context);
-    final dateFormat = DateFormat('dd MMM yyyy, hh:mm:ss a');
+    final lms = Provider.of<LmsAdminProvider>(context);
+    final dateFormat = DateFormat('dd MMM yyyy, hh:mm a');
+    final logs = lms.auditLogs.where((l) {
+      final typeOk = _selectedType == 'all' ||
+          l.targetType.toLowerCase() == _selectedType.toLowerCase();
+      final q = _search.trim().toLowerCase();
+      final searchOk = q.isEmpty ||
+          l.actionType.toLowerCase().contains(q) ||
+          l.targetName.toLowerCase().contains(q) ||
+          l.adminEmail.toLowerCase().contains(q);
+      return typeOk && searchOk;
+    }).toList();
 
     return Scaffold(
       backgroundColor: AppTheme.bgWarm,
       appBar: AppBar(
-        title: const Text('Administrative Audit Logs'),
+        title: const Text('Audit History'),
         backgroundColor: AppTheme.surfaceWarmWhite,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: AppTheme.primaryNavy),
-            onPressed: () => admin.loadAuditLogs(),
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () => lms.loadAuditLogs(targetType: _selectedType, search: _search),
           ),
         ],
       ),
       body: Column(
         children: [
-          // Security Explainer
           Container(
-            padding: const EdgeInsets.all(14),
             color: AppTheme.surfaceWarmWhite,
-            child: const Row(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+            child: Column(
               children: [
-                Icon(Icons.verified_user_rounded, color: AppTheme.primaryNavy, size: 22),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Immutable audit records tracked for all content creations, modifications, deletions, and student suspensions.',
-                    style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.3),
+                TextField(
+                  decoration: const InputDecoration(
+                    hintText: 'Search action, target, or admin email...',
+                    prefixIcon: Icon(Icons.search_rounded),
+                    isDense: true,
+                  ),
+                  onChanged: (v) => setState(() => _search = v),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 34,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _filters.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 6),
+                    itemBuilder: (_, idx) {
+                      final f = _filters[idx];
+                      final selected = _selectedType == f;
+                      return ChoiceChip(
+                        label: Text(
+                          f.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: selected ? Colors.white : AppTheme.primaryNavy,
+                          ),
+                        ),
+                        selected: selected,
+                        selectedColor: AppTheme.primaryNavy,
+                        onSelected: (_) => setState(() => _selectedType = f),
+                      );
+                    },
                   ),
                 ),
               ],
             ),
           ),
-
           Expanded(
-            child: admin.auditLogs.isEmpty
-                ? const Center(child: Text('No audit log entries recorded yet.'))
+            child: logs.isEmpty
+                ? const EmptyStateView(
+                    icon: Icons.history_edu_rounded,
+                    title: 'No Audit Records Found',
+                    subtitle: 'Admin mutations and changes will appear here.',
+                  )
                 : ListView.separated(
                     padding: const EdgeInsets.all(16),
-                    itemCount: admin.auditLogs.length,
+                    itemCount: logs.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (ctx, idx) {
-                      final log = admin.auditLogs[idx];
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.surfaceWarmWhite,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppTheme.borderWarmSubtle),
-                        ),
-                        padding: const EdgeInsets.all(14),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                _actionBadge(log.actionType),
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(color: AppTheme.surfaceCream, borderRadius: BorderRadius.circular(4)),
-                                  child: Text(log.targetEntity, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.primaryNavy)),
-                                ),
-                                const Spacer(),
-                                Text(
-                                  dateFormat.format(log.timestamp),
-                                  style: const TextStyle(fontSize: 10, color: AppTheme.textMuted),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              log.description,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                const Icon(Icons.account_circle_outlined, size: 13, color: AppTheme.textSecondary),
-                                const SizedBox(width: 4),
-                                Text(
-                                  log.adminEmail,
-                                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
-                                ),
-                                const Spacer(),
-                                Text(
-                                  'Ref: ${log.targetId}',
-                                  style: const TextStyle(fontSize: 10, color: AppTheme.textMuted, fontFamily: 'monospace'),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                    itemBuilder: (_, idx) => _AuditLogTile(
+                      log: logs[idx],
+                      dateLabel: dateFormat.format(logs[idx].createdAt.toLocal()),
+                    ),
                   ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _actionBadge(String action) {
-    Color color = AppTheme.primaryNavy;
-    if (action == 'CREATE' || action == 'IMPORT') color = AppTheme.successGreen;
-    if (action == 'DELETE' || action == 'SUSPEND') color = AppTheme.errorRed;
-    if (action == 'UPDATE') color = AppTheme.goldBell;
+class _AuditLogTile extends StatelessWidget {
+  final LmsAuditLog log;
+  final String dateLabel;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        action,
-        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: color),
+  const _AuditLogTile({required this.log, required this.dateLabel});
+
+  @override
+  Widget build(BuildContext context) {
+    const encoder = JsonEncoder.withIndent('  ');
+    return AdminCard(
+      padding: EdgeInsets.zero,
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+        title: Row(
+          children: [
+            StatusBadge(text: log.actionType, color: AppTheme.primaryNavy),
+            const SizedBox(width: 6),
+            StatusBadge(text: log.targetType, color: AppTheme.goldBell),
+          ],
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                log.targetName,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${log.adminEmail} • $dateLabel',
+                style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+              ),
+            ],
+          ),
+        ),
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.location_on_outlined, size: 13, color: AppTheme.textMuted),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  '${log.locationName} (${log.ipAddress})',
+                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                ),
+              ),
+            ],
+          ),
+          if (log.previousValue != null) ...[
+            const SizedBox(height: 8),
+            const Text('Previous:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.errorRedBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                encoder.convert(log.previousValue),
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 10.5),
+              ),
+            ),
+          ],
+          if (log.newValue != null) ...[
+            const SizedBox(height: 8),
+            const Text('New:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.successGreenBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                encoder.convert(log.newValue),
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 10.5),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

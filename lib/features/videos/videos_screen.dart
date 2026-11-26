@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../models/video_lesson.dart';
 import '../../services/mock_data.dart';
+import '../../shared/tenali_top_app_bar.dart';
 
 class VideosScreen extends StatelessWidget {
   const VideosScreen({super.key});
@@ -12,8 +13,8 @@ class VideosScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppTheme.bgLight,
-      appBar: AppBar(
-        title: const Text('Postal Video Classes'),
+      appBar: const TenaliTopAppBar(
+        title: 'Video Classes',
       ),
       body: videos.isEmpty
           ? Center(
